@@ -1,98 +1,73 @@
-<!doctype html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-
-        <title>Laravel</title>
-
-        <!-- Fonts -->
-        <link href="https://fonts.googleapis.com/css?family=Nunito:200,600" rel="stylesheet" type="text/css">
-
-        <!-- Styles -->
-        <style>
-            html, body {
-                background-color: #fff;
-                color: #636b6f;
-                font-family: 'Nunito', sans-serif;
-                font-weight: 200;
-                height: 100vh;
-                margin: 0;
-            }
-
-            .full-height {
-                height: 100vh;
-            }
-
-            .flex-center {
-                align-items: center;
-                display: flex;
-                justify-content: center;
-            }
-
-            .position-ref {
-                position: relative;
-            }
-
-            .top-right {
-                position: absolute;
-                right: 10px;
-                top: 18px;
-            }
-
-            .content {
-                text-align: center;
-            }
-
-            .title {
-                font-size: 84px;
-            }
-
-            .links > a {
-                color: #636b6f;
-                padding: 0 25px;
-                font-size: 13px;
-                font-weight: 600;
-                letter-spacing: .1rem;
-                text-decoration: none;
-                text-transform: uppercase;
-            }
-
-            .m-b-md {
-                margin-bottom: 30px;
-            }
-        </style>
-    </head>
-    <body>
-        <div class="flex-center position-ref full-height">
-            @if (Route::has('login'))
-                <div class="top-right links">
-                    @auth
-                        <a href="{{ url('/home') }}">Home</a>
-                    @else
-                        <a href="{{ route('login') }}">Login</a>
-
-                        @if (Route::has('register'))
-                            <a href="{{ route('register') }}">Register</a>
-                        @endif
-                    @endauth
+@extends('app')
+@section('content')
+    <?php /* Left this here just to show how I called the method to upload Action Items from the provided file */ ?>
+    <div class="col-xs-12 text-center" style="margin-top: 30px;" hidden>
+        {!! Form::open(['route' => 'seed_data', 'files' => 'true' ]) !!}
+        <input type="file" id="seed_file" name="seed_file">
+        {!! Form::submit() !!}
+        {!! Form::close() !!}
+    </div>
+    @if(isset($actions) && $actions->count() > 0)
+    <div class="col-xs-12 text-center" style="margin-top: 30px; color: white;">
+        <div class="col-xs-12 text-center">
+            <p style="font-size: 24px;">Action item list</p>
+        </div>
+        <div class="row actions-contener margin_fix" style="width: 100%;">
+            @foreach($actions as $a)
+                <div class="col-xs-12" style="border-top: 1px solid black; padding: 15px; min-height: 60px;">
+                    <div class="col-xs-11 col-sm-11 padding_fix text-left" style="font-size: 16px;">
+                        <span>{{ $a->id }}.</span>
+                        <span>{{ $a->description }}</span>
+                        <b>({{ $a->status }})</b>
+                    </div>
+                    <div class="col-xs-1 col-sm-1 padding_fix" style="display: flex; align-items: center; justify-content: center; height: 100%;">
+                        <i class="fa fa-plus action-show" style="font-size: 14px; color: lightgreen; background: gray; padding: 5px; border-radius: 2px; cursor: pointer;" id="{{ $a->id }}"></i>
+                    </div>
                 </div>
-            @endif
-
-            <div class="content">
-                <div class="title m-b-md">
-                    Laravel
+                <?php /* Each hidden div has its own file upload form */ ?>
+                <div class="col-xs-12 action-div{{$a->id}}" style="padding: 10px;" hidden>
+                    @if(is_null($a->filepath) || $a->filepath == "")
+                        {!! Form::open(['route' => 'upload-action-file', 'files' => 'true' ]) !!}
+                        <input type="hidden" name="action_id" value="{{ $a->id }}">
+                        <input type="file" name="action_file">
+                        <input type="submit" value="Upload file" style="float: left; color: black; width: 200px;">
+                        {!! Form::close() !!}
+                    @elseif($a->status == "completed" && \Storage::exists("photos/" . $a->filepath))
+                        {!! Form::open(array('route' => ['actions.update', $a], 'method' => 'PUT' )) !!}
+                        <button class="btn btn-new" style="display: inline-block; margin-bottom: 10px;">Mark as done</button>
+                        {!! Form::close() !!}
+                        <a class="link-new" href="{{ route('download-file', ['id' => $a->id ]) }}" style="display: block;">Download {{ $a->filepath }}</a>
+                    @elseif($a->status == "done" && \Storage::exists("photos/" . $a->filepath))
+                        <a class="link-new" href="{{ route('download-file', ['id' => $a->id ]) }}" style="display: block;">Download {{ $a->filepath }}</a>
+                    @endif
                 </div>
-
-                <div class="links">
-                    <a href="https://laravel.com/docs">Documentation</a>
-                    <a href="https://laracasts.com">Laracasts</a>
-                    <a href="https://laravel-news.com">News</a>
-                    <a href="https://nova.laravel.com">Nova</a>
-                    <a href="https://forge.laravel.com">Forge</a>
-                    <a href="https://github.com/laravel/laravel">GitHub</a>
-                </div>
+            @endforeach
+        </div>
+    </div>
+    @else
+        <div class="col-xs-12 text-center" style="margin-top: 30px; color: white;">
+            <div class="col-xs-12 text-center">
+                <p style="font-size: 24px;">There are no actions to display</p>
             </div>
         </div>
-    </body>
-</html>
+    @endif
+    <?php /* This div is used to display all the validation errors that might have taken place */ ?>
+    <div class="error-container">
+        @if(isset($errors) && !is_null($errors))
+            @foreach ($errors->all() as $message)
+                <div style="position: fixed; bottom: 10px; border: 1px solid red; width: 320px; padding: 10px 0px; text-align: center; left: 50%; margin-left: -160px;">
+                    <p style="margin-bottom: 0px;">{{ $message }}</p>
+                </div>
+            @endforeach
+        @endif
+    </div>
+@stop
+<?php /* Created div with slidetoggle to avoid redirecting with only 10 items present */ ?>
+@section('scripts')
+    <script type="text/javascript">
+        $(".action-show").on('click', function() {
+            var id = $(this).attr('id');
+           $(".action-div" + id).slideToggle("fast");
+        });
+    </script>
+@stop
