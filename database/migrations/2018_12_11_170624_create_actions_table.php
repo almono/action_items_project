@@ -16,7 +16,7 @@ class CreateActionsTable extends Migration
         Schema::create('actions', function (Blueprint $table) {
             $table->increments('id');
             $table->string('description', 200);
-            $table->enum('status',['new','completed','done']);
+            $table->enum('status',['new','completed','done'])->default("new");
             $table->string('filepath', 200)->nullable();
             $table->timestamps();
         });
