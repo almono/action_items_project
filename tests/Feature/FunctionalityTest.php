@@ -33,7 +33,11 @@ class FunctionalityTest extends TestCase
         ]);
 
         // Assert the file was stored...
-        Storage::disk('local')->assertExiphpsts("photos/" . "3-photo.jpg");
+        Storage::disk('local')->assertExists("photos/" . "3-photo.jpg");
+
+        Storage::disk('local')->delete("photos/3-photo.jpg");
+
+        Storage::disk('local')->assertMissing("photos/" . "3-photo.jpg");
 
     }
 }
