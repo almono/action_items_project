@@ -1,5 +1,9 @@
 To run the project:
 
+There has to be an empty database set up on localhost for storing the data ( I used a MySQL database with Heidi software ).
+
+To connect to the database inside your project, copy the env-example and name it .env ( The data for DB connection has to be filled out to match just created database ).
+
 If composer is installed on the machine all that has to be done is just running few commands from the console inside project directory.
 While inside the project directory first command to run is "composer install" which should install all needed vendors for the project to work.
 
